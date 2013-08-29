@@ -28,6 +28,9 @@ var
 
 	version = "@VERSION",
 
+	//Cache copies of native ES5 methods
+	nativeEvery = Array.prototype.every,
+
 	// Define a local copy of jQuery
 	jQuery = function( selector, context ) {
 		// The jQuery object is actually just the init constructor 'enhanced'
@@ -480,48 +483,66 @@ jQuery.extend({
 		var value,
 			i = 0,
 			length = obj.length,
-			isArray = isArraylike( obj );
+			isArray = isArraylike( obj ),
+			hasArgs = !!args,
+			iterator;
 
-		if ( args ) {
-			if ( isArray ) {
-				for ( ; i < length; i++ ) {
-					value = callback.apply( obj[ i ], args );
-
-					if ( value === false ) {
-						break;
-					}
+		if (nativeEvery) {
+			iterator = function (o, i) {
+				if ( hasArgs ) {
+					value = callback.apply( o, args );
+				} else {
+					value = callback.call( o, i, o );
 				}
-			} else {
-				for ( i in obj ) {
-					value = callback.apply( obj[ i ], args );
 
-					if ( value === false ) {
-						break;
-					}
+				if ( value !== false) {
+					value = true;
 				}
-			}
+				return value;
+			};
+			nativeEvery.call(obj, iterator);
 
-		// A special, fast, case for the most common use of each
 		} else {
-			if ( isArray ) {
-				for ( ; i < length; i++ ) {
-					value = callback.call( obj[ i ], i, obj[ i ] );
+			if ( hasArgs ) {
+				if ( isArray ) {
+					for ( ; i < length; i++ ) {
+						value = callback.apply( obj[ i ], args );
 
-					if ( value === false ) {
-						break;
+						if ( value === false ) {
+							break;
+						}
+					}
+				} else {
+					for ( i in obj ) {
+						value = callback.apply( obj[ i ], args );
+
+						if ( value === false ) {
+							break;
+						}
 					}
 				}
-			} else {
-				for ( i in obj ) {
-					value = callback.call( obj[ i ], i, obj[ i ] );
 
-					if ( value === false ) {
-						break;
+			// A special, fast, case for the most common use of each
+			} else {
+				if ( isArray ) {
+					for ( ; i < length; i++ ) {
+						value = callback.call( obj[ i ], i, obj[ i ] );
+
+						if ( value === false ) {
+							break;
+						}
+					}
+				} else {
+					for ( i in obj ) {
+						value = callback.call( obj[ i ], i, obj[ i ] );
+
+						if ( value === false ) {
+							break;
+						}
 					}
 				}
 			}
 		}
-
 		return obj;
 	},
 

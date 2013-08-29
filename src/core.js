@@ -487,7 +487,7 @@ jQuery.extend({
 			hasArgs = !!args,
 			iterator;
 
-		if (nativeEvery) {
+		if (isArray && nativeEvery) {
 			iterator = function (o, i) {
 				if ( hasArgs ) {
 					value = callback.apply( o, args );
